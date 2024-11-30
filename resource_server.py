@@ -1,5 +1,5 @@
+import jwt
 from flask import Flask, jsonify, request
-import requests
 
 import config
 
@@ -12,13 +12,22 @@ PROTECTED_RESOURCES = {
     }
 }
 
+# Load public key for verifying JWT
+with open("public_key.pem", "r") as key_file:
+    PUBLIC_KEY = key_file.read()
+
 app = Flask(__name__)
 
 
 def verify_token(token):
-    """Verify the access token with the authorization server"""
-    response = requests.post(config.VERIFY_TOKEN_ENDPOINT, data={"token": token})
-    return response.json() if response.status_code == 200 else None
+    """Verify the JWT access token using the public key"""
+    try:
+        decoded_token = jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"])
+        return decoded_token
+    except jwt.ExpiredSignatureError:
+        return None  # Token has expired
+    except jwt.InvalidTokenError:
+        return None  # Token is invalid
 
 
 @app.route("/api/profile", methods=["GET"])
@@ -30,7 +39,7 @@ def get_profile():
 
     token = auth_header.split(" ")[1]
 
-    # Verify token with authorization server
+    # Verify token locally using public key
     token_info = verify_token(token)
     if not token_info:
         return jsonify({"error": "invalid_token"}), 401

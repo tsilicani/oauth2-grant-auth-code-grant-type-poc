@@ -1,6 +1,7 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
+import jwt
 from flask import Flask, jsonify, redirect, render_template_string, request, session
 
 import config
@@ -9,7 +10,11 @@ import config
 USERS = {"tony": {"password": "passwordSuperSecret"}}
 
 # Token settings
-TOKEN_EXPIRATION = timedelta(minutes=60)
+TOKEN_EXPIRATION = timedelta(hours=3)
+
+# Load private key for signing JWT
+with open("private_key.pem", "r") as key_file:
+    PRIVATE_KEY = key_file.read()
 
 # In-memory storage for authorization codes and tokens
 auth_codes = (
@@ -114,7 +119,7 @@ def authorize():
             "client_id": session["client_id"],
             "user_id": username,
             "redirect_uri": session["redirect_uri"],
-            "expires_at": datetime.utcnow() + TOKEN_EXPIRATION,
+            "expires_at": datetime.now(timezone.utc) + TOKEN_EXPIRATION,
         }
 
         # Redirect back to client with auth code
@@ -149,17 +154,25 @@ def token():
         return jsonify({"error": "invalid_grant"}), 400
 
     # Verify the authorization code hasn't expired
-    if datetime.utcnow() > auth_code_data["expires_at"]:
+    if datetime.now(timezone.utc) > auth_code_data["expires_at"]:
         return jsonify({"error": "invalid_grant"}), 400
 
-    # Generate access token
-    access_token = generate_token()
+    # Generate JWT as access token
+    access_token = jwt.encode(
+        {
+            "client_id": client_id,
+            "user_id": auth_code_data["user_id"],
+            "exp": int((datetime.now(timezone.utc) + TOKEN_EXPIRATION).timestamp()),
+        },
+        PRIVATE_KEY,
+        algorithm="RS256",
+    )
 
-    # Store token information
+    # Store token information (optional, for debugging)
     access_tokens[access_token] = {
         "client_id": client_id,
         "user_id": auth_code_data["user_id"],
-        "expires_at": datetime.utcnow() + TOKEN_EXPIRATION,
+        "expires_at": datetime.now(timezone.utc) + TOKEN_EXPIRATION,
     }
 
     # Remove used authorization code
@@ -170,30 +183,6 @@ def token():
             "access_token": access_token,
             "token_type": "Bearer",
             "expires_in": int(TOKEN_EXPIRATION.total_seconds()),
-        }
-    )
-
-
-@app.route("/verify_token", methods=["POST"])
-def verify_token():
-    """Endpoint for resource server to verify access tokens"""
-    token = request.form.get("token")
-
-    if not token or token not in access_tokens:
-        return jsonify({"error": "invalid_token"}), 401
-
-    token_data = access_tokens[token]
-
-    # Check if token has expired
-    if datetime.utcnow() > token_data["expires_at"]:
-        del access_tokens[token]
-        return jsonify({"error": "token_expired"}), 401
-
-    return jsonify(
-        {
-            "valid": True,
-            "user_id": token_data["user_id"],
-            "client_id": token_data["client_id"],
         }
     )
 
