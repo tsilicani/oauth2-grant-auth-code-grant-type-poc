@@ -3,29 +3,13 @@ from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, redirect, render_template_string, request, session
 
-# Authorization server configuration
-AUTH_SERVER_HOST = "localhost"
-AUTH_SERVER_PORT = 8000
-AUTH_SERVER_URL = f"http://{AUTH_SERVER_HOST}:{AUTH_SERVER_PORT}"
-
-# Client application configuration (normally this would be in a database)
-REGISTERED_CLIENTS = {
-    "client123": {
-        "client_secret": "secret123",
-        "redirect_uris": ["http://localhost:8002/callback"],
-    }
-}
-
-# Mock user database (in a real app, this would be in a secure database)
-USERS = {"user123": {"password": "password123", "name": "Test User"}}
+import config
 
 # Token settings
 TOKEN_EXPIRATION = timedelta(minutes=60)
 
 # In-memory storage for authorization codes and tokens
-auth_codes = (
-    {}
-)  # Format: {code: {"client_id": "...", "user_id": "...", "redirect_uri": "..."}}
+auth_codes = {}  # Format: {code: {"client_id": "...", "user_id": "...", "redirect_uri": "..."}}
 access_tokens = {}  # Format: {token: {"client_id": "...", "user_id": "..."}}
 
 app = Flask(__name__)
@@ -85,13 +69,10 @@ def authorize():
         redirect_uri = request.args.get("redirect_uri")
         response_type = request.args.get("response_type")
 
-        if not client_id or client_id not in REGISTERED_CLIENTS:
+        if client_id != config.CLIENT_ID:
             return jsonify({"error": "invalid_client"}), 400
 
-        if (
-            not redirect_uri
-            or redirect_uri not in REGISTERED_CLIENTS[client_id]["redirect_uris"]
-        ):
+        if redirect_uri != config.CALLBACK_ENDPOINT:
             return jsonify({"error": "invalid_redirect_uri"}), 400
 
         if response_type != "code":
@@ -109,7 +90,7 @@ def authorize():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        if username not in USERS or USERS[username]["password"] != password:
+        if username not in config.USERS or config.USERS[username]["password"] != password:
             return "Invalid credentials", 401
 
         # Generate authorization code
@@ -139,10 +120,7 @@ def token():
     if not client_id or not client_secret:
         return jsonify({"error": "invalid_request"}), 400
 
-    if (
-        client_id not in REGISTERED_CLIENTS
-        or REGISTERED_CLIENTS[client_id]["client_secret"] != client_secret
-    ):
+    if client_id != config.CLIENT_ID or client_secret != config.CLIENT_SECRET:
         return jsonify({"error": "invalid_client"}), 401
 
     if grant_type != "authorization_code":
@@ -208,4 +186,4 @@ def verify_token():
 
 
 if __name__ == "__main__":
-    app.run(host=AUTH_SERVER_HOST, port=AUTH_SERVER_PORT, debug=True)
+    app.run(host=config.HOST, port=config.AUTH_SERVER_PORT, debug=True)

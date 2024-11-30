@@ -1,29 +1,24 @@
 from flask import Flask, jsonify, request
 import requests
+import config
 
 # Resource server configuration
-RESOURCE_SERVER_HOST = "localhost"
-RESOURCE_SERVER_PORT = 8001
+RESOURCE_SERVER_HOST = config.HOST
+RESOURCE_SERVER_PORT = config.RESOURCE_SERVER_PORT
 RESOURCE_SERVER_URL = f"http://{RESOURCE_SERVER_HOST}:{RESOURCE_SERVER_PORT}"
 
 # Authorization server configuration
-AUTH_SERVER_URL = "http://localhost:8000"
+AUTH_SERVER_URL = config.AUTH_SERVER_URL
 
 # Mock protected resources (in a real app, this would be in a database)
-PROTECTED_RESOURCES = {
-    "user123": {
-        "name": "Test User",
-        "email": "test@example.com",
-        "profile": "This is a protected resource for Test User",
-    }
-}
+PROTECTED_RESOURCES = config.PROTECTED_RESOURCES
 
 app = Flask(__name__)
 
 
 def verify_token(token):
     """Verify the access token with the authorization server"""
-    response = requests.post(f"{AUTH_SERVER_URL}/verify_token", data={"token": token})
+    response = requests.post(config.VERIFY_TOKEN_ENDPOINT, data={"token": token})
     return response.json() if response.status_code == 200 else None
 
 
@@ -63,4 +58,4 @@ def health_check():
 
 
 if __name__ == "__main__":
-    app.run(host=RESOURCE_SERVER_HOST, port=RESOURCE_SERVER_PORT, debug=True)
+    app.run(host=config.HOST, port=config.RESOURCE_SERVER_PORT, debug=True)
