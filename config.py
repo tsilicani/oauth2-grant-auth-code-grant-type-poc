@@ -26,12 +26,3 @@ CLIENT_SECRET = "secret123"
 
 # Mock user database
 USERS = {"tony": {"password": "passwordSuperSecret"}}
-
-# Mock protected resources
-PROTECTED_RESOURCES = {
-    "tony": {
-        "name": "Test User",
-        "email": "test@example.com",
-        "profile": "This is a protected resource for Test User",
-    }
-}
