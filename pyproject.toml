@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "oauth2-grant-auth-code-grant-type-poc"
+version = "0.1.0"
+description = "OAuth 2.0 Authorization Code Grant Type Implementation"
+authors = []
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "^2.3.3"
+requests = "^2.31.0"
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
