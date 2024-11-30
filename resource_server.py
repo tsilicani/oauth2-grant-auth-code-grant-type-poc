@@ -1,5 +1,6 @@
-from flask import Flask, jsonify, request
 import requests
+from flask import Flask, jsonify, request
+
 import config
 
 # Resource server configuration
@@ -49,12 +50,6 @@ def get_profile():
 
     # Return protected resource
     return jsonify(PROTECTED_RESOURCES[user_id])
-
-
-@app.route("/api/health", methods=["GET"])
-def health_check():
-    """Public endpoint for health checking"""
-    return jsonify({"status": "healthy"})
 
 
 if __name__ == "__main__":

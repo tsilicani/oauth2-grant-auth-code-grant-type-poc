@@ -9,7 +9,9 @@ import config
 TOKEN_EXPIRATION = timedelta(minutes=60)
 
 # In-memory storage for authorization codes and tokens
-auth_codes = {}  # Format: {code: {"client_id": "...", "user_id": "...", "redirect_uri": "..."}}
+auth_codes = (
+    {}
+)  # Format: {code: {"client_id": "...", "user_id": "...", "redirect_uri": "..."}}
 access_tokens = {}  # Format: {token: {"client_id": "...", "user_id": "..."}}
 
 app = Flask(__name__)
@@ -21,31 +23,39 @@ LOGIN_TEMPLATE = """
 <html>
 <head>
     <title>OAuth 2.0 Authorization</title>
+    <link rel="stylesheet" href="https://unpkg.com/boltcss/bolt.min.css" />
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-        .container { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
-        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .form-group { margin-bottom: 15px; }
-        input { padding: 8px; width: 100%; box-sizing: border-box; }
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Authorization Request</h2>
-        <p>Client <strong>{{ client_id }}</strong> is requesting access to your account.</p>
-        
-        <form method="post">
-            <div class="form-group">
-                <label>Username:</label>
-                <input type="text" name="username" required>
-            </div>
-            <div class="form-group">
-                <label>Password:</label>
-                <input type="password" name="password" required>
-            </div>
-            <input type="submit" value="Authorize" class="btn">
-        </form>
-    </div>
+    <main class="flex-center">
+        <div class="card auth-card">
+            <h2>Authorization Request</h2>
+            <p>Client <strong>{{ client_id }}</strong> is requesting access to your account.</p>
+            <form method="post">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Authorize</button>
+            </form>
+        </div>
+    </main>
 </body>
 </html>
 """
@@ -90,7 +100,10 @@ def authorize():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        if username not in config.USERS or config.USERS[username]["password"] != password:
+        if (
+            username not in config.USERS
+            or config.USERS[username]["password"] != password
+        ):
             return "Invalid credentials", 401
 
         # Generate authorization code

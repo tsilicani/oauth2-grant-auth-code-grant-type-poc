@@ -1,6 +1,7 @@
-from flask import Flask, redirect, render_template_string, request, session
-import requests
 import secrets
+
+import requests
+from flask import Flask, redirect, render_template_string, request, session
 
 import config
 
@@ -13,34 +14,47 @@ HOME_TEMPLATE = """
 <html>
 <head>
     <title>OAuth 2.0 Client</title>
+    <link rel="stylesheet" href="https://unpkg.com/boltcss/bolt.min.css" />
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
-        .container { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
-        .btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .client-card {
+            width: 100%;
+            max-width: 600px;
+        }
+        .code {
+            max-width: 100%;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>OAuth 2.0 Client Application</h2>
-        {% if error %}
-            <div style="color: red; margin-bottom: 20px;">
-                Error: {{ error }}
-            </div>
-        {% endif %}
-        
-        {% if not access_token %}
-            <p>Click below to start the OAuth 2.0 Authorization Code Flow:</p>
-            <a href="{{ auth_url }}" class="btn">Login with OAuth</a>
-        {% else %}
-            <p>Successfully authenticated!</p>
-            <h3>Protected Resource:</h3>
-            <pre>{{ protected_resource }}</pre>
-            <form action="/logout" method="post" style="margin-top: 20px;">
-                <input type="submit" value="Logout" class="btn" style="background: #dc3545;">
-            </form>
-        {% endif %}
-    </div>
+    <main class="flex-center">
+        <div class="card client-card">
+            <h2>OAuth 2.0 Client Application</h2>
+            {% if error %}
+                <div class="alert alert-error">
+                    Error: {{ error }}
+                </div>
+            {% endif %}
+            {% if not access_token %}
+                <p>Click below to start the OAuth 2.0 Authorization Code Flow:</p>
+                <a href="{{ auth_url }}" class="btn btn-primary">Login with OAuth</a>
+            {% else %}
+                <div class="alert alert-success">Successfully authenticated!</div>
+                <h3>Protected Resource:</h3>
+                <pre class="code">{{ protected_resource | tojson(indent=2) }}</pre>
+                <form action="/logout" method="post" style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-error">Logout</button>
+                </form>
+            {% endif %}
+        </div>
+    </main>
 </body>
 </html>
 """
