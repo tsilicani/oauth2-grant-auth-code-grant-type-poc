@@ -3,8 +3,7 @@
         "dotenv",
         "jsonify",
         "pycache",
-        "tojson",
-        "venv"
+        "tojson"
     ],
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
@@ -15,8 +14,5 @@
         "editor.formatOnSave": true,
         "editor.rulers": [120]
     },
-    "python.formatting.provider": "black",
-    "python.formatting.blackArgs": ["--line-length", "120"],
-    "isort.args": ["--profile", "black", "--line-length", "120"],
-    "flake8.args": ["--max-line-length=120"]
+    "isort.args": ["--profile", "black", "--line-length", "120"]
 }
