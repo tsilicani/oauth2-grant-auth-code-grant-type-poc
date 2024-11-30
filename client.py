@@ -68,7 +68,7 @@ def home():
     # If we have an access token, try to get the protected resource
     if "access_token" in session:
         response = requests.get(
-            config.PROFILE_ENDPOINT,
+            f"http://{config.HOST}:{config.RESOURCE_SERVER_PORT}/api/profile",
             headers={"Authorization": f"Bearer {session['access_token']}"},
         )
         if response.status_code == 200:

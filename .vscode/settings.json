@@ -3,7 +3,8 @@
         "dotenv",
         "jsonify",
         "pycache",
-        "tojson"
+        "tojson",
+        "venv"
     ],
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {

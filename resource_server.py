@@ -1,5 +1,5 @@
-import requests
 from flask import Flask, jsonify, request
+import requests
 
 import config
 
@@ -21,20 +21,14 @@ def verify_token(token):
     return response.json() if response.status_code == 200 else None
 
 
-def get_token_from_header():
-    """Extract the access token from the Authorization header"""
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return None
-    return auth_header.split(" ")[1]
-
-
 @app.route("/api/profile", methods=["GET"])
 def get_profile():
     # Extract token from Authorization header
-    token = get_token_from_header()
-    if not token:
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
         return jsonify({"error": "missing_token"}), 401
+
+    token = auth_header.split(" ")[1]
 
     # Verify token with authorization server
     token_info = verify_token(token)
