@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "start:auth": "poetry run python auth_server.py",
+    "start:resource": "poetry run python resource_server.py",
+    "start:client": "poetry run python client.py"
+  }
+}

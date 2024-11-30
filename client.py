@@ -1,13 +1,34 @@
-from flask import Flask, redirect, request, session, render_template_string
-import requests
 import secrets
-import config
+
+import requests
+from flask import Flask, redirect, render_template_string, request, session
+
+# Client configuration
+CLIENT_HOST = "localhost"
+CLIENT_PORT = 8002
+CLIENT_URL = f"http://{CLIENT_HOST}:{CLIENT_PORT}"
+
+# OAuth 2.0 client credentials
+CLIENT_ID = "client123"
+CLIENT_SECRET = "secret123"
+
+# Authorization server endpoints
+AUTH_SERVER_URL = "http://localhost:8000"
+AUTHORIZATION_ENDPOINT = f"{AUTH_SERVER_URL}/authorize"
+TOKEN_ENDPOINT = f"{AUTH_SERVER_URL}/token"
+
+# Resource server endpoint
+RESOURCE_SERVER_URL = "http://localhost:8001"
+PROFILE_ENDPOINT = f"{RESOURCE_SERVER_URL}/api/profile"
+
+# OAuth 2.0 settings
+REDIRECT_URI = f"{CLIENT_URL}/callback"
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
 # HTML template for the home page
-HOME_TEMPLATE = '''
+HOME_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -26,7 +47,6 @@ HOME_TEMPLATE = '''
         {% if error %}
             <p class="error">{{ error }}</p>
         {% endif %}
-        
         {% if not access_token %}
             <a href="{{ auth_url }}" class="btn">Login with OAuth</a>
         {% else %}
@@ -39,77 +59,72 @@ HOME_TEMPLATE = '''
     </div>
 </body>
 </html>
-'''
+"""
 
-@app.route('/')
+
+@app.route("/")
 def home():
     # Get profile data if we have an access token
     profile = None
     error = None
-    
-    if 'access_token' in session:
+
+    if "access_token" in session:
         # Try to fetch protected resource
         response = requests.get(
-            config.PROFILE_ENDPOINT,
-            headers={'Authorization': f"Bearer {session['access_token']}"}
+            PROFILE_ENDPOINT,
+            headers={"Authorization": f"Bearer {session['access_token']}"},
         )
         if response.status_code == 200:
             profile = response.json()
         else:
             error = "Failed to fetch profile data"
-            session.pop('access_token', None)
+            session.pop("access_token", None)
 
     # Generate authorization URL
-    auth_url = (
-        f"{config.AUTHORIZATION_ENDPOINT}"
-        f"?response_type=code"
-        f"&client_id={config.CLIENT_ID}"
-        f"&redirect_uri={config.REDIRECT_URI}"
-    )
+    auth_url = f"{AUTHORIZATION_ENDPOINT}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
 
     return render_template_string(
         HOME_TEMPLATE,
         auth_url=auth_url,
-        access_token=session.get('access_token'),
+        access_token=session.get("access_token"),
         profile=profile,
-        error=error
+        error=error,
     )
 
-@app.route('/callback')
+
+@app.route("/callback")
 def callback():
     # Get authorization code from query parameters
-    code = request.args.get('code')
+    code = request.args.get("code")
     if not code:
-        return redirect('/')
+        return redirect("/")
 
     # Exchange authorization code for access token
     response = requests.post(
-        config.TOKEN_ENDPOINT,
+        TOKEN_ENDPOINT,
         data={
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': config.REDIRECT_URI,
-            'client_id': config.CLIENT_ID,
-            'client_secret': config.CLIENT_SECRET,
-        }
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": REDIRECT_URI,
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+        },
     )
 
     if response.status_code == 200:
         # Store the access token in session
         token_data = response.json()
-        session['access_token'] = token_data['access_token']
-    
-    return redirect('/')
+        session["access_token"] = token_data["access_token"]
 
-@app.route('/logout')
+    return redirect("/")
+
+
+@app.route("/logout")
 def logout():
     # Clear session
     session.clear()
-    return redirect('/')
+    return redirect("/")
 
-if __name__ == '__main__':
-    app.run(
-        host=config.CLIENT_HOST,
-        port=config.CLIENT_PORT,
-        debug=True
-    )
+
+if __name__ == "__main__":
+    app.run(host=CLIENT_HOST, port=CLIENT_PORT, debug=True)
