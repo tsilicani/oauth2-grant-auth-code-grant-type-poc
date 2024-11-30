@@ -5,6 +5,9 @@ from flask import Flask, jsonify, redirect, render_template_string, request, ses
 
 import config
 
+# Mock user database
+USERS = {"tony": {"password": "passwordSuperSecret"}}
+
 # Token settings
 TOKEN_EXPIRATION = timedelta(minutes=60)
 
@@ -100,10 +103,7 @@ def authorize():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        if (
-            username not in config.USERS
-            or config.USERS[username]["password"] != password
-        ):
+        if username not in USERS or USERS[username]["password"] != password:
             return "Invalid credentials", 401
 
         # Generate authorization code

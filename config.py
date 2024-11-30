@@ -23,6 +23,3 @@ CALLBACK_ENDPOINT = f"{CLIENT_URL}/callback"
 # OAuth 2.0 client credentials
 CLIENT_ID = "client123"
 CLIENT_SECRET = "secret123"
-
-# Mock user database
-USERS = {"tony": {"password": "passwordSuperSecret"}}
